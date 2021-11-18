@@ -1,0 +1,5 @@
+find_package(Protobuf REQUIRED)
+include_directories(${Protobuf_INCLUDE_DIRS})
+protobuf_generate_cpp(PROTO_SRC PROTO_HEADER epics_event.proto)
+add_library(proto ${PROTO_HEADER} ${PROTO_SRC})
+target_link_libraries(proto PRIVATE protobuf::protobuf)
