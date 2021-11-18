@@ -32,7 +32,9 @@ target_link_libraries(
     fmt::fmt
     spdlog::spdlog
     protobuf::protobuf
-    nlohmann_json::nlohmann_json)
+    nlohmann_json::nlohmann_json
+    -static-libgcc
+    -static-libstdc++)
 
 install(
     TARGETS
