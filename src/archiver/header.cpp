@@ -1,36 +1,32 @@
 #include "header.hpp"
-#include "utils.hpp"
 #include "fmt/format.h"
+#include "utils.hpp"
 
 namespace Archiver {
 
 
-ArchiverProtoHeader::ArchiverProtoHeader(EPICS::PayloadInfo message) : m_Message(std::move(message)) {}
+ArchiverProtoHeader::ArchiverProtoHeader(Header data) : m_Data(std::move(data)) {}
 std::string ArchiverProtoHeader::ToString() const
 {
   return fmt::format(
     "PayloadInfo({},{},{})",
-    m_Message.pvname(),
-    EPICS::PayloadType_Name(m_Message.type()),
+    m_Data.pvname,
+    EPICS::PayloadType_Name(m_Data.type),
     StringToHexRepr(SerializeToString()));
 }
 
 const google::protobuf::Message &ArchiverProtoHeader::GetMessage() const
 {
-  return m_Message;
+  MESSAGE.Clear();
+  MESSAGE.set_pvname(m_Data.pvname);
+  MESSAGE.set_type(m_Data.type);
+  MESSAGE.set_year(m_Data.year);
+  return MESSAGE;
 }
 
-ArchiverProtoHeader CreatePayloadInfo(const char *pvname, int32_t year, EPICS::PayloadType type)
+ArchiverProtoHeader CreatePayloadInfo(Header data)
 {
-  std::string response;
-
-  EPICS::PayloadInfo payloadInfo;
-  payloadInfo.Clear();
-  payloadInfo.set_pvname(pvname);
-  payloadInfo.set_year(year);
-  payloadInfo.set_type(type);
-  payloadInfo.SerializeToString(&response);
-  return ArchiverProtoHeader(payloadInfo);
+  return ArchiverProtoHeader(data);
 }
 
-}// namespace ArchiverProto
+}// namespace Archiver

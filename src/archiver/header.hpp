@@ -7,19 +7,27 @@
 
 namespace Archiver {
 
+struct Header
+{
+  std::string pvname;
+  uint32_t year;
+  EPICS::PayloadType type;
+};
+
 class ArchiverProtoHeader : public ArchiverProto
 {
 public:
-  explicit ArchiverProtoHeader(EPICS::PayloadInfo message);
+  explicit ArchiverProtoHeader(Header data);
   std::string ToString() const override;
 
 protected:
   const google::protobuf::Message &GetMessage() const override;
 
 private:
-  EPICS::PayloadInfo m_Message;
+  const Header m_Data;
+  static inline EPICS::PayloadInfo MESSAGE;
 };
 
-ArchiverProtoHeader CreatePayloadInfo(const char *pvname, int32_t year, EPICS::PayloadType type);
+ArchiverProtoHeader CreatePayloadInfo(Header);
 
 }// namespace Archiver

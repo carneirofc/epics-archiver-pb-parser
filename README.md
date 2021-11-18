@@ -9,6 +9,12 @@ The following compilers should work:
   * [gcc 9+](https://gcc.gnu.org/)
 
   * [clang 10+](https://clang.llvm.org/)
+  <details>
+  - Debian/Ubuntu
+  ```command
+    apt install llvm-12 llvm-12-doc clang-12 clang-tidy-12 clang-format-12 clangd-12 lld-12 lldb-12
+  ```
+  </details>
 
   * [Visual Studio 2019 or higher](https://visualstudio.microsoft.com/)
 
@@ -31,22 +37,6 @@ The following compilers should work:
 	</details>
 
 3. [CMake 3.15+](https://cmake.org/)
-	<details>
-	<summary>Install Command</summary>
-
-	- Debian/Ubuntu:
-
-			sudo apt-get install cmake
-
-	- Windows:
-
-			choco install cmake -y
-
-	- MacOS:
-
-			brew install cmake
-
-	</details>
 
 ## Build Instructions
 

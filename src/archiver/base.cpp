@@ -1,14 +1,18 @@
 #include "base.hpp"
-#include "utils.hpp"
-#include "proto/epics_event.pb.h"
 #include "fmt/format.h"
+#include "proto/epics_event.pb.h"
+#include "utils.hpp"
 
 namespace Archiver {
-ArchiverProtoScalarDouble::ArchiverProtoScalarDouble(EPICS::ScalarDouble message) : m_Message(message) {}
+ArchiverProtoScalarDouble::ArchiverProtoScalarDouble(ScalarDouble message) : m_Data(std::move(message)) {}
 
 const google::protobuf::Message &ArchiverProtoScalarDouble::GetMessage() const
 {
-  return m_Message;
+  MESSAGE.Clear();
+  MESSAGE.set_nano(m_Data.nano);
+  MESSAGE.set_val(m_Data.val);
+  MESSAGE.set_secondsintoyear(m_Data.secondsintoyear);
+  return MESSAGE;
 }
 
 std::string ArchiverProtoScalarDouble::ToString() const
@@ -16,20 +20,20 @@ std::string ArchiverProtoScalarDouble::ToString() const
 
   return fmt::format(
     "ScalarDouble({},{},{},{})",
-    m_Message.val(),
-    m_Message.secondsintoyear(),
-    m_Message.nano(),
+    m_Data.val,
+    m_Data.secondsintoyear,
+    m_Data.nano,
     StringToHexRepr(SerializeToString()));
 }
-
-ArchiverProtoScalarDouble CreateArchiverProtoScalarDouble(double value, uint32_t secondsintoyear, uint32_t nanos)
+ArchiverProtoScalarDouble CreateArchiverProtoScalarDouble(ScalarDouble data)
 {
-  EPICS::ScalarDouble proto;
-  proto.Clear();
-  proto.set_val(value);
-  proto.set_nano(nanos);
-  proto.set_secondsintoyear(secondsintoyear);
-  return ArchiverProtoScalarDouble(proto);
+  return ArchiverProtoScalarDouble(data);
+}
+
+ArchiverProtoScalarDouble CreateArchiverProtoScalarDouble(const double value, const uint32_t secondsintoyear, const uint32_t nanos)
+{
+  const auto data = ScalarDouble{ .val = value, .secondsintoyear = secondsintoyear, .nano = nanos };
+  return ArchiverProtoScalarDouble(data);
 }
 
 std::string ArchiverProto::SerializeToStringEscaped() const

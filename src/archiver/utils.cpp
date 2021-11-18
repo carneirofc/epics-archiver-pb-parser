@@ -24,7 +24,7 @@ std::string StringReplace(const std::string &source, const std::string &from, co
 {
   std::string newString;
   newString.reserve(source.length());// avoids a few memory allocations
-  if (from == "") {
+  if (from.empty()) {
     return source;
   }
 
