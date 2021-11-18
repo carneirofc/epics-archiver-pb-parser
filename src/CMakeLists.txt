@@ -19,10 +19,10 @@ add_subdirectory(archiver)
 file(GLOB main_SRC "*.cpp")
 message("Main SRCs ${main_SRC}")
 # Generic test that uses conan libs
-add_executable(main ${main_SRC})
-target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_executable(archiver_pb_parser ${main_SRC})
+target_include_directories(archiver_pb_parser PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(
-    main 
+    archiver_pb_parser
   PRIVATE
     project_options
     project_warnings
