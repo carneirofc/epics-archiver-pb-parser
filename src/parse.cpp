@@ -6,6 +6,7 @@
 #include <functional>
 #include <iostream>
 #include <istream>
+#include <memory>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -17,14 +18,13 @@
 #include <nlohmann/json.hpp>
 
 #include "archiver/base.hpp"
-#include "archiver/header.hpp"
 #include "archiver/utils.hpp"
 #include "proto/epics_event.pb.h"
 
 using namespace Archiver;
-static void PrintInfo(const Archiver::ArchiverProto &payload)
+static void PrintInfo(const Archiver::ArchiverProto *payload)
 {
-  spdlog::debug("Payload Info: {}", payload.ToString());
+  spdlog::debug("Payload Info: {}", payload->ToString());
 }
 
 std::string slurp(std::ifstream &in)
@@ -36,8 +36,8 @@ std::string slurp(std::ifstream &in)
 
 struct Data
 {
-  ArchiverProtoHeader header;
-  std::vector<ArchiverProtoScalarDouble> data;
+  std::unique_ptr<ArchiverProto> header;
+  std::vector<std::unique_ptr<ArchiverProto>> data;
 };
 
 int JsonToProtobuff(const options &opt)
@@ -60,32 +60,33 @@ int JsonToProtobuff(const options &opt)
     return json;
   };
 
+  const auto ParseHeader = [](const nlohmann::json &json) -> std::unique_ptr<ArchiverProto> {
+    const auto header = json.at("header");
+    const auto pvname = header.at("pvname").get<std::string>();
+    const auto year = header.at("year").get<uint32_t>();
+    const auto type = header.at("type").get<uint32_t>();
+    return CreateArchiverPayloadInfo({ .pvname = pvname, .year = year, .type = static_cast<EPICS::PayloadType>(type) });
+  };
 
-  const auto ParseJson = [](const nlohmann::json &json) -> Data {
-    const auto ParseHeader = [](const nlohmann::json &json) -> ArchiverProtoHeader {
-      const auto header = json.at("header");
-      const auto pvname = header.at("pvname").get<std::string>();
-      const auto year = header.at("year").get<uint32_t>();
-      const auto type = header.at("type").get<uint32_t>();
-      return CreatePayloadInfo({ .pvname = pvname, .year = year, .type = static_cast<EPICS::PayloadType>(type) });
-    };
-
-    const auto ParseData = [](const nlohmann::json &json) -> std::vector<ArchiverProtoScalarDouble> {
-      std::vector<ArchiverProtoScalarDouble> parsed;
-      for (const auto &event : json.at("events")) {
-        parsed.push_back(CreateArchiverProtoScalarDouble(
+  const auto ParseData = [](const nlohmann::json &json) -> std::vector<std::unique_ptr<ArchiverProto>> {
+    std::vector<std::unique_ptr<ArchiverProto>> parsed;
+    for (const auto &event : json.at("events")) {
+      parsed.push_back(
+        CreateArchiverScalarDouble(
           { .val = event.at("val").get<double>(),
             .secondsintoyear = event.at("secondsintoyear").get<uint32_t>(),
             .nano = event.at("nano").get<uint32_t>() }));
-      }
-      return parsed;
-    };
+    }
+    return parsed;
+  };
 
+  const auto ParseJson = [&ParseHeader, &ParseData](const nlohmann::json &json) -> Data {
     return {
       .header = ParseHeader(json),
       .data = ParseData(json)
     };
   };
+
   const auto DumpProtocolBuffer = [](const std::string &outFilename, const Data &data) {
     spdlog::info("Dumping protocol buffers into {}", outFilename);
     std::ofstream out(outFilename);
@@ -93,10 +94,10 @@ int JsonToProtobuff(const options &opt)
       throw std::runtime_error(fmt::format("Failed to open/create output file {}", outFilename));
     }
 
-    out << data.header.SerializeToStringEscaped();
+    out << data.header->SerializeToStringEscaped();
     out << '\n';
     for (const auto &d : data.data) {
-      out << d.SerializeToStringEscaped() << '\n';
+      out << d->SerializeToStringEscaped() << '\n';
     }
     out.close();
     spdlog::info("Protocol buffer generated succesfully '{}'", outFilename);
@@ -105,9 +106,9 @@ int JsonToProtobuff(const options &opt)
   try {
     const auto json = LoadJsonFromFile(opt.jsonFilename);
     const auto data = ParseJson(json);
-    PrintInfo(data.header);
+    PrintInfo(data.header.get());
     for (const auto &e : data.data) {
-      PrintInfo(e);
+      PrintInfo(e.get());
     }
     DumpProtocolBuffer(opt.outFilename, data);
 

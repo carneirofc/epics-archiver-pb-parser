@@ -2,6 +2,7 @@
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 #include "proto/epics_event.pb.h"
@@ -13,12 +14,23 @@ class ArchiverProto
 {
 public:
   virtual ~ArchiverProto() = default;
-  [[nodiscard]] virtual std::string ToString() const = 0;
+  [[nodiscard]] virtual std::string ToString() const
+  {
+    return GetMessage().DebugString();
+  };
+
   [[nodiscard]] std::string SerializeToStringEscaped() const;
   [[nodiscard]] std::string SerializeToString() const;
 
 protected:
   [[nodiscard]] virtual const google::protobuf::Message &GetMessage() const = 0;
+};
+
+struct Header
+{
+  std::string pvname;
+  uint32_t year;
+  EPICS::PayloadType type;
 };
 
 struct ScalarDouble
@@ -28,21 +40,28 @@ struct ScalarDouble
   uint32_t nano;
 };
 
-class ArchiverProtoScalarDouble : public ArchiverProto
+template<typename TMessage>
+class ArchiverGenericData : public ArchiverProto
 {
+
 public:
-  explicit ArchiverProtoScalarDouble(ScalarDouble data);
-  std::string ToString() const override;
+  explicit ArchiverGenericData(TMessage m) : m_Message(std::move(m)){};
+  [[nodiscard]] std::string ToString() const override
+  {
+    return GetMessage().ShortDebugString();
+  };
 
 protected:
-  const google::protobuf::Message &GetMessage() const override;
+  [[nodiscard]] const google::protobuf::Message &GetMessage() const override
+  {
+    return m_Message;
+  };
 
 private:
-  ScalarDouble m_Data;
-  static inline EPICS::ScalarDouble MESSAGE;
+  TMessage m_Message;
 };
 
-ArchiverProtoScalarDouble CreateArchiverProtoScalarDouble(const ScalarDouble data);
-ArchiverProtoScalarDouble CreateArchiverProtoScalarDouble(const double value, const uint32_t secondsintoyear, const uint32_t nanos);
+[[nodiscard]] std::unique_ptr<ArchiverGenericData<EPICS::ScalarDouble>> CreateArchiverScalarDouble(ScalarDouble data);
+[[nodiscard]] std::unique_ptr<ArchiverGenericData<EPICS::PayloadInfo>> CreateArchiverPayloadInfo(Header data);
 
 }// namespace Archiver
