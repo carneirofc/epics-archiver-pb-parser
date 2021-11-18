@@ -5,6 +5,7 @@ project(archiver_pb_parser CXX)
 include(cmake/StandardProjectSettings.cmake)
 include(cmake/PreventInSourceBuilds.cmake)
 
+
 # Debug, Release, RelWithDebInfo and MinSizeRel
 set(CMAKE_BUILD_TYPE Release)
 
@@ -55,3 +56,5 @@ if(ENABLE_TESTING)
 endif()
 
 add_subdirectory(src)
+
+include(cmake/CPack.cmake)
