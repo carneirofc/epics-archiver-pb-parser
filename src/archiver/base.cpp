@@ -4,37 +4,7 @@
 #include "utils.hpp"
 
 namespace Archiver {
-ArchiverProtoScalarDouble::ArchiverProtoScalarDouble(ScalarDouble message) : m_Data(std::move(message)) {}
 
-const google::protobuf::Message &ArchiverProtoScalarDouble::GetMessage() const
-{
-  MESSAGE.Clear();
-  MESSAGE.set_nano(m_Data.nano);
-  MESSAGE.set_val(m_Data.val);
-  MESSAGE.set_secondsintoyear(m_Data.secondsintoyear);
-  return MESSAGE;
-}
-
-std::string ArchiverProtoScalarDouble::ToString() const
-{
-
-  return fmt::format(
-    "ScalarDouble({},{},{},{})",
-    m_Data.val,
-    m_Data.secondsintoyear,
-    m_Data.nano,
-    StringToHexRepr(SerializeToString()));
-}
-ArchiverProtoScalarDouble CreateArchiverProtoScalarDouble(ScalarDouble data)
-{
-  return ArchiverProtoScalarDouble(data);
-}
-
-ArchiverProtoScalarDouble CreateArchiverProtoScalarDouble(const double value, const uint32_t secondsintoyear, const uint32_t nanos)
-{
-  const auto data = ScalarDouble{ .val = value, .secondsintoyear = secondsintoyear, .nano = nanos };
-  return ArchiverProtoScalarDouble(data);
-}
 
 std::string ArchiverProto::SerializeToStringEscaped() const
 {
@@ -60,6 +30,24 @@ void EscapePayloadString(std::string &in)
   StringReplaceInplace(in, "\x1B", "\x1B\x01");
   StringReplaceInplace(in, "\x0A", "\x1B\x02");
   StringReplaceInplace(in, "\x0D", "\x1B\x03");
+}
+
+[[nodiscard]] std::unique_ptr<ArchiverGenericData<EPICS::ScalarDouble>> CreateArchiverScalarDouble(ScalarDouble data)
+{
+  EPICS::ScalarDouble m;
+  m.set_nano(data.nano);
+  m.set_val(data.val);
+  m.set_secondsintoyear(data.secondsintoyear);
+  return std::make_unique<ArchiverGenericData<EPICS::ScalarDouble>>(m);
+};
+
+[[nodiscard]] std::unique_ptr<ArchiverGenericData<EPICS::PayloadInfo>> CreateArchiverPayloadInfo(Header data)
+{
+  EPICS::PayloadInfo m;
+  m.set_pvname(data.pvname);
+  m.set_type(data.type);
+  m.set_year(data.year);
+  return std::make_unique<ArchiverGenericData<EPICS::PayloadInfo>>(m);
 }
 
 }// namespace Archiver

@@ -16,7 +16,6 @@
 #include <nlohmann/json.hpp>
 
 #include "archiver/base.hpp"
-#include "archiver/header.hpp"
 #include "archiver/utils.hpp"
 #include "proto/epics_event.pb.h"
 
