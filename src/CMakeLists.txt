@@ -33,3 +33,10 @@ target_link_libraries(
     spdlog::spdlog
     protobuf::protobuf
     nlohmann_json::nlohmann_json)
+
+install(
+    TARGETS
+      archiver_pb_parser
+    DESTINATION
+      archiver_pb_parser
+    )
