@@ -1,4 +1,56 @@
-# cpp_starter_project
+# epics-archiver-pb-parser
+
+Genrate EPICS Archiver compatible protocol buffers from JSON.
+```command
+❯ ./archiver_pb_parser --help
+Archiver Protobuff Parser
+    Usage:
+          main --json=filename  --out=filename [--verbose]
+          main (-h | --help)
+          main --version
+ Options:
+          -h --help         Show this screen.
+          --version         Show version.
+          --json=filename   Input json file
+          --out=filename    Output protocol buffer
+          --verbose         Enable verbose logging
+```
+Expects json with the following format:
+ ```json
+{
+    "header": {"pvname": "Test:PV:Name-Mon", "year": 2021, "type": 6},
+    "events": [
+        {"val": 121.101, "secondsintoyear": 1, "nano": 0},
+        {"val": 122.101, "secondsintoyear": 2, "nano": 0},
+        {"val": 123.101, "secondsintoyear": 3, "nano": 0},
+        {"val": 124.101, "secondsintoyear": 4, "nano": 0},
+        {"val": 125.101, "secondsintoyear": 5, "nano": 0},
+        {"val": 126.101, "secondsintoyear": 6, "nano": 0}
+     ]
+}
+ ```
+ Where type is an integer enum (DISCLAIMER! Only ScalarDouble is Implemented!):
+```c++
+enum PayloadType {
+	SCALAR_STRING = 0;      
+	SCALAR_SHORT = 1;         
+	SCALAR_FLOAT = 2;       
+	SCALAR_ENUM = 3;
+	SCALAR_BYTE = 4;
+	SCALAR_INT = 5;
+	SCALAR_DOUBLE = 6;
+	WAVEFORM_STRING = 7;      
+	WAVEFORM_SHORT = 8;         
+	WAVEFORM_FLOAT = 9;       
+	WAVEFORM_ENUM = 10;
+	WAVEFORM_BYTE = 11;
+	WAVEFORM_INT = 12;
+	WAVEFORM_DOUBLE = 13;
+	V4_GENERIC_BYTES = 14;
+}
+```
+
+
 
 ### Necessary Dependencies
 1. A C++ compiler that supports C++20.
