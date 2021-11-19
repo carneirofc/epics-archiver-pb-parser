@@ -63,8 +63,11 @@ int JsonToProtobuff(const options &opt)
   const auto ParseHeader = [](const nlohmann::json &json) -> std::unique_ptr<ArchiverProto> {
     const auto header = json.at("header");
     const auto pvname = header.at("pvname").get<std::string>();
-    const auto year = header.at("year").get<uint32_t>();
-    const auto type = header.at("type").get<uint32_t>();
+    const auto year = header.at("year").get<int32_t>();
+    const auto type = header.at("type").get<int32_t>();
+    if (!EPICS::PayloadType_IsValid(type)) {
+      throw std::runtime_error(fmt::format("Invalid payload type '{}'", type));
+    }
     return CreateArchiverPayloadInfo({ .pvname = pvname, .year = year, .type = static_cast<EPICS::PayloadType>(type) });
   };
 

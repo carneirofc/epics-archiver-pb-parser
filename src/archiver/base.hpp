@@ -14,6 +14,17 @@ class ArchiverProto
 {
 public:
   virtual ~ArchiverProto() = default;
+
+protected:
+  // C.67: A polymorphic class should suppress public copy/move
+  // https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#c67-a-polymorphic-class-should-suppress-public-copymove
+  ArchiverProto() = default;
+  ArchiverProto(const ArchiverProto &) = default;
+  ArchiverProto &operator=(const ArchiverProto &) = default;
+  ArchiverProto(ArchiverProto &&) = default;
+  ArchiverProto &operator=(ArchiverProto &&) = default;
+
+public:
   [[nodiscard]] virtual std::string ToString() const
   {
     return GetMessage().DebugString();
@@ -29,7 +40,7 @@ protected:
 struct Header
 {
   std::string pvname;
-  uint32_t year;
+  int32_t year;
   EPICS::PayloadType type;
 };
 
