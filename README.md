@@ -1,4 +1,4 @@
-# cpp_starter_project
+# epics-archiver-pb-parser
 
 Genrate EPICS Archiver compatible protocol buffers from JSON.
 ```command
