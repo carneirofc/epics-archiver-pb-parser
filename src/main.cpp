@@ -57,7 +57,14 @@ static options ParseArgs(int argc, const char **argv)
 
 int main(int argc, const char **argv)
 {
-  options opt = ParseArgs(argc, argv);
+  options opt;
+  try {
+    opt = ParseArgs(argc, argv);
+  } catch (const nlohmann::json::exception &e) {
+    spdlog::critical("Failed to parse input parameters '{}'", e.what());
+    exit(1);
+  }
+
   spdlog::set_level(opt.loggingLevel);
 
   GOOGLE_PROTOBUF_VERIFY_VERSION;
