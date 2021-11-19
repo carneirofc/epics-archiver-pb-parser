@@ -21,15 +21,25 @@ std::string ArchiverProto::SerializeToString() const
 }
 
 /**
-  The ASCII escape character 0x1B is escaped to the following two characters 0x1B 0x01
+  @brief The ASCII escape character 0x1B is escaped to the following two characters 0x1B 0x01
   The ASCII newline character \n or 0x0A is escaped to the following two characters 0x1B 0x02
   The ASCII carriage return character 0x0D is escaped to the following two characters 0x1B 0x03
-  */
+*/
 void EscapePayloadString(std::string &in)
 {
   StringReplaceInplace(in, "\x1B", "\x1B\x01");
   StringReplaceInplace(in, "\x0A", "\x1B\x02");
   StringReplaceInplace(in, "\x0D", "\x1B\x03");
+}
+
+/**
+  @brief Removed escaped bytes from input protocol buffer string
+*/
+void EscapeRemoveFromPayloadString(std::string &in)
+{
+  StringReplaceInplace(in, "\x1B\x03", "\x0D");
+  StringReplaceInplace(in, "\x1B\x02", "\x0A");
+  StringReplaceInplace(in, "\x1B\x01", "\x1B");
 }
 
 [[nodiscard]] std::unique_ptr<ArchiverGenericData<EPICS::ScalarDouble>> CreateArchiverScalarDouble(ScalarDouble data)
