@@ -42,22 +42,22 @@ void EscapeRemoveFromPayloadString(std::string &in)
   StringReplaceInplace(in, "\x1B\x01", "\x1B");
 }
 
-[[nodiscard]] std::unique_ptr<ArchiverGenericData<EPICS::ScalarDouble>> CreateArchiverScalarDouble(ScalarDouble data)
+[[nodiscard]] ArchiverGenericData<EPICS::ScalarDouble> CreateArchiverScalarDouble(ScalarDouble data)
 {
   EPICS::ScalarDouble m;
   m.set_nano(data.nano);
   m.set_val(data.val);
   m.set_secondsintoyear(data.secondsintoyear);
-  return std::make_unique<ArchiverGenericData<EPICS::ScalarDouble>>(m);
+  return ArchiverGenericData(m);
 };
 
-[[nodiscard]] std::unique_ptr<ArchiverGenericData<EPICS::PayloadInfo>> CreateArchiverPayloadInfo(Header data)
+[[nodiscard]] ArchiverGenericData<EPICS::PayloadInfo> CreateArchiverPayloadInfo(Header data)
 {
   EPICS::PayloadInfo m;
   m.set_pvname(data.pvname);
   m.set_type(data.type);
   m.set_year(data.year);
-  return std::make_unique<ArchiverGenericData<EPICS::PayloadInfo>>(m);
+  return ArchiverGenericData<EPICS::PayloadInfo>(m);
 }
 
 }// namespace Archiver

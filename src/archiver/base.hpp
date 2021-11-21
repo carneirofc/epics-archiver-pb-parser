@@ -72,7 +72,7 @@ private:
   TMessage m_Message;
 };
 
-[[nodiscard]] std::unique_ptr<ArchiverGenericData<EPICS::ScalarDouble>> CreateArchiverScalarDouble(ScalarDouble data);
-[[nodiscard]] std::unique_ptr<ArchiverGenericData<EPICS::PayloadInfo>> CreateArchiverPayloadInfo(Header data);
+[[nodiscard]] ArchiverGenericData<EPICS::ScalarDouble> CreateArchiverScalarDouble(ScalarDouble data);
+[[nodiscard]] ArchiverGenericData<EPICS::PayloadInfo> CreateArchiverPayloadInfo(Header data);
 
 }// namespace Archiver

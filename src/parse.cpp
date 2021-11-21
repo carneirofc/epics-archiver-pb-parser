@@ -24,17 +24,7 @@
 #include "proto/epics_event.pb.h"
 
 using namespace Archiver;
-static void PrintInfo(const Archiver::ArchiverProto *payload)
-{
-  spdlog::debug("Payload Info: {}", payload->ToString());
-}
 
-
-struct Data
-{
-  std::shared_ptr<ArchiverProto> header;
-  std::vector<std::string> data;
-};
 
 template<typename T, typename D>
 std::string SerializeToPB(const D &d)
@@ -55,8 +45,22 @@ struct D
   uint32_t secondsintoyear;
 };
 
+[[nodiscard]] Header CreateHeaderData(const nlohmann::json &json)
+{
+
+  const auto header = json.at("header");
+  const auto pvname = header.at("pvname").get<std::string>();
+  const auto year = header.at("year").get<int32_t>();
+  const auto type = header.at("type").get<int32_t>();
+  if (!EPICS::PayloadType_IsValid(type)) {
+    throw std::runtime_error(fmt::format("Invalid payload type '{}'", type));
+  }
+
+  return { .pvname = pvname, .year = year, .type = static_cast<EPICS::PayloadType>(type) };
+}
+
 template<typename T>
-D<T> CreatePayloadData(const nlohmann::json &json)
+[[nodiscard]] D<T> CreatePayloadData(const nlohmann::json &json)
 {
   return {
     .val = json.at("val").get<T>(),
@@ -65,7 +69,7 @@ D<T> CreatePayloadData(const nlohmann::json &json)
   };
 }
 
-std::string SerializeJsonToPB(const nlohmann::json &json, const EPICS::PayloadType type)
+[[nodiscard]] std::string SerializeJsonToPB(const nlohmann::json &json, const EPICS::PayloadType type)
 {
   switch (type) {
 
@@ -81,6 +85,7 @@ std::string SerializeJsonToPB(const nlohmann::json &json, const EPICS::PayloadTy
     throw std::runtime_error(fmt::format("Payload type '{}':'{}' not implemented", type, EPICS::PayloadType_Name(type)));
   }
 }
+
 
 int JsonToProtobuff(const options &opt)
 {
@@ -102,17 +107,11 @@ int JsonToProtobuff(const options &opt)
     return json;
   };
 
-  const auto ParseHeader = [](const nlohmann::json &json, std::ofstream &out) {
-    const auto header = json.at("header");
-    const auto pvname = header.at("pvname").get<std::string>();
-    const auto year = header.at("year").get<int32_t>();
-    const auto type = header.at("type").get<int32_t>();
-    if (!EPICS::PayloadType_IsValid(type)) {
-      throw std::runtime_error(fmt::format("Invalid payload type '{}'", type));
-    }
-
-    const auto p = CreateArchiverPayloadInfo({ .pvname = pvname, .year = year, .type = static_cast<EPICS::PayloadType>(type) });
-    out << p->SerializeToStringEscaped() << '\n';
+  const auto ParseHeader = [](const nlohmann::json &json, std::ofstream &out) -> Header {
+    auto header = CreateHeaderData(json);
+    auto p = CreateArchiverPayloadInfo(header);
+    out << p.SerializeToStringEscaped() << '\n';
+    return header;
   };
 
   const auto ParseData = [](const nlohmann::json &json, const EPICS::PayloadType type, std::ofstream &out) {
@@ -126,23 +125,13 @@ int JsonToProtobuff(const options &opt)
   };
 
   const auto ParseJson = [&ParseHeader, &ParseData](const nlohmann::json &json, std::ofstream &out) {
-    const auto ParsePayloadType = [](const nlohmann::json &json) -> EPICS::PayloadType {
-      const auto type = json.at("header").at("type").get<int32_t>();
-      if (!EPICS::PayloadType_IsValid(type)) {
-        throw std::runtime_error(fmt::format("Invalid payload type '{}'", type));
-      }
-      return static_cast<EPICS::PayloadType>(type);
-    };
-
-    auto type = ParsePayloadType(json);
-
-    ParseHeader(json, out);
-    ParseData(json, type, out);
+    const auto heder = ParseHeader(json, out);
+    ParseData(json, heder.type, out);
   };
 
   const auto DumpProtocolBuffer = [&ParseJson](const std::string &outFilename, const nlohmann::json &json) {
     spdlog::info("Dumping protocol buffers into {}", outFilename);
-    std::ofstream out(outFilename, std::ios::binary | std::ios::out | std::ios::app);
+    std::ofstream out(outFilename, std::ios::binary | std::ios::out);
     if (!out) {
       throw std::runtime_error(fmt::format("Failed to open/create output file {}", outFilename));
     }
