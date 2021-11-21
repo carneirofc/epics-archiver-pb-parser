@@ -1,6 +1,6 @@
 #pragma once
-#include <spdlog/spdlog.h>
 #include <string>
+#include "spdlog/spdlog.h"
 
 struct options
 {
