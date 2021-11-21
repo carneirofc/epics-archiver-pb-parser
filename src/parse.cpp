@@ -142,7 +142,7 @@ int JsonToProtobuff(const options &opt)
 
   const auto DumpProtocolBuffer = [&ParseJson](const std::string &outFilename, const nlohmann::json &json) {
     spdlog::info("Dumping protocol buffers into {}", outFilename);
-    std::ofstream out(outFilename);
+    std::ofstream out(outFilename, std::ios::binary | std::ios::out | std::ios::app);
     if (!out) {
       throw std::runtime_error(fmt::format("Failed to open/create output file {}", outFilename));
     }
